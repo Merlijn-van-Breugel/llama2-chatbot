@@ -2,7 +2,8 @@ let socket = io();
 let isRecording = false;
 let transcriptText = '';
 
-// Make sure this function is called when the DOM is fully loaded
+const DITTO_SENTENCE = "Ditto becomes smarter and more accurate the more people use it. If Ditto makes mistakes, corrections allows Ditto to learn and do better next time.";
+
 document.addEventListener('DOMContentLoaded', function() {
     const recordButton = document.getElementById('recordButton');
     if (recordButton) {
@@ -13,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     checkTranscriptionBox();
+    initializeDittoSentence();
+    resetHighlighting();
 });
 
 function toggleRecording() {
@@ -66,6 +69,12 @@ socket.on('server_message', function(data) {
 socket.on('transcription_update', function(data) {
     console.log("Received transcription update:", data);
     updateTranscriptionBox(data.text, data.is_final);
+    updateDittoSentenceHighlight(data.matched_index);
+});
+
+socket.on('reset_highlighting', function() {
+    console.log("Resetting highlighting");
+    resetHighlighting();
 });
 
 function updateTranscriptionBox(text, isFinal) {
@@ -74,11 +83,42 @@ function updateTranscriptionBox(text, isFinal) {
         if (isFinal) {
             transcriptText += text + ' ';
         }
-        transcriptionDiv.textContent = transcriptText + (isFinal ? '' : text);
-        console.log("Updated transcription box:", transcriptionDiv.textContent);
+        let displayText = transcriptText + (isFinal ? '' : text);
+        transcriptionDiv.textContent = displayText;
+        console.log("Updated transcription box:", displayText);
     } else {
         console.error("Transcription box not found");
     }
+}
+
+function initializeDittoSentence() {
+    const dittoSentenceDiv = document.getElementById('ditto-sentence');
+    if (dittoSentenceDiv) {
+        dittoSentenceDiv.innerHTML = DITTO_SENTENCE.split(' ').map(word => `<span>${word}</span>`).join(' ');
+    } else {
+        console.error("Ditto sentence div not found");
+    }
+}
+
+function updateDittoSentenceHighlight(matchedIndex) {
+    const dittoSentenceDiv = document.getElementById('ditto-sentence');
+    if (dittoSentenceDiv) {
+        const words = dittoSentenceDiv.querySelectorAll('span');
+        words.forEach((word, index) => {
+            if (index < matchedIndex) {
+                word.style.backgroundColor = 'yellow';
+            } else {
+                word.style.backgroundColor = 'transparent';
+            }
+        });
+    } else {
+        console.error("Ditto sentence div not found");
+    }
+}
+
+function resetHighlighting() {
+    updateDittoSentenceHighlight(0);
+    updateTranscriptionBox('');
 }
 
 function checkTranscriptionBox() {
@@ -102,7 +142,7 @@ socket.on('error', (error) => {
 // Test function
 function testTranscriptionBox() {
     console.log("Testing transcription box update");
-    updateTranscriptionBox("This is a test transcription.", true);
+    updateTranscriptionBox("This is a test transcription.", true, 3);
 }
 
 // Call test function when page loads

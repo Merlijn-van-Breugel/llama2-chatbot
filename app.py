@@ -40,24 +40,31 @@ RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
 DITTO_SENTENCE = "Ditto becomes smarter and more accurate the more people use it. If Ditto makes mistakes, corrections allows Ditto to learn and do better next time."
-DITTO_WORDS = DITTO_SENTENCE.lower().split()
+DITTO_WORDS = re.findall(r'\w+', DITTO_SENTENCE.lower())
 
 last_matched_index = 0
 
 def fuzzy_match_ditto_sentence(transcript):
-    global last_matched_index
-    transcript_words = re.findall(r'\b\w+\b', transcript.lower())
-    
-    for i in range(last_matched_index, len(DITTO_WORDS)):
-        remaining_ditto = ' '.join(DITTO_WORDS[last_matched_index:i+1])
-        remaining_transcript = ' '.join(transcript_words)
-        
-        if remaining_transcript.startswith(remaining_ditto):
-            last_matched_index = i + 1
-        else:
+    transcript_words = re.findall(r'\w+', transcript.lower())
+    max_matched_index = 0
+    current_match_index = 0
+
+    for i, word in enumerate(transcript_words):
+        if current_match_index >= len(DITTO_WORDS):
             break
-    
-    return last_matched_index
+
+        if fuzzy_match(word, DITTO_WORDS[current_match_index]):
+            current_match_index += 1
+            if current_match_index > max_matched_index:
+                max_matched_index = current_match_index
+        else:
+            current_match_index = 0
+
+    return max_matched_index
+
+def fuzzy_match(str1, str2):
+    threshold = 80  # Adjust this value to change the matching sensitivity
+    return fuzz.ratio(str1, str2) >= threshold
 
 class MicrophoneStream:
     def __init__(self, rate=RATE, chunk=CHUNK):
@@ -232,10 +239,14 @@ def transcribe_audio_stream():
                 transcript = result.alternatives[0].transcript
                 is_final = result.is_final
 
+                matched_index = fuzzy_match_ditto_sentence(transcript)
                 logger.info(f"Transcription: {transcript} ({'final' if is_final else 'interim'})")
+                logger.info(f"Matched index: {matched_index}")
+
                 socketio.emit('transcription_update', {
                     'text': transcript, 
-                    'is_final': is_final
+                    'is_final': is_final,
+                    'matched_index': matched_index
                 })
                 socketio.sleep(0)  # Allow other threads to run
 
