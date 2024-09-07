@@ -10,7 +10,7 @@ import wave
 import queue
 import threading
 import pyaudio
-from fuzzywuzzy import fuzz
+from fuzzywuzzy import fuzz # For fuzzy matching
 import re
 
 # Set up logging
