@@ -8,6 +8,40 @@
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
     <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .full-height {
+            height: calc(100vh - 64px); /* Subtract header height */
+            display: flex;
+            flex-direction: column;
+        }
+        .controls {
+            padding: 16px;
+        }
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .boxes-container {
+            flex-grow: 1;
+            display: flex;
+            min-height: 0; /* This is important for nested flexbox scrolling */
+        }
+        .scrollable {
+            overflow-y: auto;
+        }
+        .mdl-card {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .mdl-card__supporting-text {
+            flex-grow: 1;
+            overflow-y: auto;
+            width: auto;
+        }
+    </style>
 </head>
 <body>
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
@@ -17,9 +51,10 @@
             </div>
         </header>
         <main class="mdl-layout__content">
-            <div class="page-content">
-                <div class="mdl-grid">
-                    <div class="mdl-cell mdl-cell--12-col">
+            <div class="page-content full-height">
+                <!-- Controls at the top -->
+                <div class="controls mdl-grid">
+                    <div class="mdl-cell mdl-cell--4-col">
                         <button id="micTestButton" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
                             Test Microphone
                         </button>
@@ -30,7 +65,7 @@
                             <span class="mdl-chip__text">Microphone test result</span>
                         </div>
                     </div>
-                    <div class="mdl-cell mdl-cell--12-col">
+                    <div class="mdl-cell mdl-cell--4-col">
                         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                             <select class="mdl-textfield__input" id="transcriptionMode">
                                 <option value="realtime">Realtime</option>
@@ -39,29 +74,49 @@
                             <label class="mdl-textfield__label" for="transcriptionMode">Transcription Mode</label>
                         </div>
                     </div>
-                    <div class="mdl-cell mdl-cell--12-col">
+                    <div class="mdl-cell mdl-cell--4-col">
                         <button id="recordButton" class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
                             <i class="material-icons">mic</i>
                         </button>
                     </div>
-                    <div class="mdl-cell mdl-cell--12-col">
-                        <div id="transcription" class="mdl-card mdl-shadow--2dp">
-                            <div class="mdl-card__title">
-                                <h2 class="mdl-card__title-text">Transcription</h2>
-                            </div>
-                            <div class="mdl-card__supporting-text" id="transcriptionText">
-                                Your transcription will appear here...
-                            </div>
+                    <!-- Add this near your other controls -->
+                    <div class="mdl-cell mdl-cell--4-col">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <select class="mdl-textfield__input" id="languageSelect">
+                                <option value="en-US">English (US)</option>
+                                <option value="nl-NL">Dutch</option>
+                                <!-- Add more language options here as needed -->
+                            </select>
+                            <label class="mdl-textfield__label" for="languageSelect">Transcription Language</label>
                         </div>
                     </div>
-                    <div class="mdl-cell mdl-cell--12-col">
-                        <div id="practice-sentences" class="mdl-card mdl-shadow--2dp">
-                            <div class="mdl-card__title">
-                                <h2 class="mdl-card__title-text">Practice Sentences</h2>
+                </div>
+                
+                <!-- Content area with boxes -->
+                <div class="content-area">
+                    <div class="boxes-container mdl-grid">
+                        <!-- Left column: Transcription -->
+                        <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet">
+                            <div class="mdl-card mdl-shadow--2dp">
+                                <div class="mdl-card__title">
+                                    <h2 class="mdl-card__title-text">Transcription</h2>
+                                </div>
+                                <div class="mdl-card__supporting-text scrollable" id="transcriptionText">
+                                    Your transcription will appear here...
+                                </div>
                             </div>
-                            <div class="mdl-card__supporting-text">
-                                <div id="ditto-sentence">
-                                    Ditto becomes smarter and more accurate the more people use it. If Ditto makes mistakes, corrections allows Ditto to learn and do better next time.
+                        </div>
+                        
+                        <!-- Right column: Practice Sentences -->
+                        <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet">
+                            <div class="mdl-card mdl-shadow--2dp">
+                                <div class="mdl-card__title">
+                                    <h2 class="mdl-card__title-text">Practice Sentences</h2>
+                                </div>
+                                <div class="mdl-card__supporting-text scrollable">
+                                    <div id="ditto-sentence">
+                                        {{ DITTO_SENTENCE }}
+                                    </div>
                                 </div>
                             </div>
                         </div>

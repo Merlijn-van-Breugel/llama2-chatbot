@@ -1,8 +1,9 @@
 let socket = io();
 let isRecording = false;
 let transcriptText = '';
+let currentLanguage = 'en-US';
 
-const DITTO_SENTENCE = "Ditto becomes smarter and more accurate the more people use it. If Ditto makes mistakes, corrections allows Ditto to learn and do better next time.";
+const DITTO_SENTENCE = "Ditto becomes smarter and more accurate the more people use it";
 
 document.addEventListener('DOMContentLoaded', function() {
     const recordButton = document.getElementById('recordButton');
@@ -16,6 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
     checkTranscriptionBox();
     initializeDittoSentence();
     resetHighlighting();
+
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.addEventListener('change', function() {
+            currentLanguage = this.value;
+            console.log("Language changed to:", currentLanguage);
+            // If you want to restart recording when language changes, call stopRecording() here
+        });
+    } else {
+        console.error("Language select not found in the DOM");
+    }
 });
 
 function toggleRecording() {
@@ -34,8 +46,8 @@ function startRecording() {
     updateTranscriptionBox('');
     
     let mode = document.getElementById('transcriptionMode').value;
-    console.log("Emitting start_recording event with mode:", mode);
-    socket.emit('start_recording', { mode: mode });
+    console.log("Emitting start_recording event with mode:", mode, "and language:", currentLanguage);
+    socket.emit('start_recording', { mode: mode, language: currentLanguage });
 }
 
 function stopRecording() {

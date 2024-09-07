@@ -48,19 +48,22 @@ def fuzzy_match_ditto_sentence(transcript):
     transcript_words = re.findall(r'\w+', transcript.lower())
     max_matched_index = 0
     current_match_index = 0
+    matched_words = []
 
     for i, word in enumerate(transcript_words):
         if current_match_index >= len(DITTO_WORDS):
             break
 
         if fuzzy_match(word, DITTO_WORDS[current_match_index]):
+            matched_words.append(DITTO_WORDS[current_match_index])
             current_match_index += 1
             if current_match_index > max_matched_index:
                 max_matched_index = current_match_index
         else:
             current_match_index = 0
+            matched_words = []
 
-    return max_matched_index
+    return max_matched_index, ' '.join(matched_words)
 
 def fuzzy_match(str1, str2):
     threshold = 80  # Adjust this value to change the matching sensitivity
@@ -149,9 +152,8 @@ def handle_connect():
 
 @socketio.on('start_recording')
 def handle_start_recording(data):
-    global transcription_mode, audio_stream, last_matched_index
+    global transcription_mode, audio_stream
     transcription_mode = data['mode']
-    last_matched_index = 0
     logger.info(f"Starting recording in {transcription_mode} mode")
     stop_transcription.clear()
     if transcription_mode == 'realtime':
@@ -204,13 +206,19 @@ def transcribe_audio_batch(audio_data, sample_rate):
         socketio.emit('error', {'message': f"Transcription error: {str(e)}"})
 
 def transcribe_audio_stream():
+    focus_words = [
+        "Ditto"
+    ]
+    speech_context = speech.SpeechContext(phrases=focus_words)
+
     global audio_stream
     client = get_speech_client()
     config = speech.RecognitionConfig(
         encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,
         language_code="en-US",
-        enable_automatic_punctuation=True
+        enable_automatic_punctuation=True,
+        speech_contexts=[speech_context]  # Add the speech context here
     )
     streaming_config = speech.StreamingRecognitionConfig(
         config=config, interim_results=True
@@ -239,9 +247,10 @@ def transcribe_audio_stream():
                 transcript = result.alternatives[0].transcript
                 is_final = result.is_final
 
-                matched_index = fuzzy_match_ditto_sentence(transcript)
+                matched_index, matched_words = fuzzy_match_ditto_sentence(transcript)
                 logger.info(f"Transcription: {transcript} ({'final' if is_final else 'interim'})")
                 logger.info(f"Matched index: {matched_index}")
+                logger.info(f"Matched words: {matched_words}")
 
                 socketio.emit('transcription_update', {
                     'text': transcript, 
