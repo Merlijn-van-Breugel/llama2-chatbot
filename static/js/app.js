@@ -1,30 +1,37 @@
 let socket = io();
 let isRecording = false;
-let finalTranscript = '';
-let interimTranscript = '';
-const dittoSentence = "Ditto becomes smarter and more accurate the more people use it. If Ditto makes mistakes, corrections allows Ditto to learn and do better next time.";
-const dittoWords = dittoSentence.split(' ');
-let currentMatchedWords = 0;
+let transcriptText = '';
 
-document.getElementById('recordButton').addEventListener('click', function() {
+// Make sure this function is called when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const recordButton = document.getElementById('recordButton');
+    if (recordButton) {
+        recordButton.addEventListener('click', toggleRecording);
+        console.log("Record button event listener added");
+    } else {
+        console.error("Record button not found in the DOM");
+    }
+
+    checkTranscriptionBox();
+});
+
+function toggleRecording() {
     if (isRecording) {
         stopRecording();
     } else {
         startRecording();
     }
-});
+}
 
 function startRecording() {
     console.log("Starting recording");
     isRecording = true;
     updateRecordButtonState(true);
-    finalTranscript = '';
-    interimTranscript = '';
-    currentMatchedWords = 0;
-    document.getElementById('transcription').innerHTML = '';
-    updateDittoSentence(0);
+    transcriptText = '';
+    updateTranscriptionBox('');
     
     let mode = document.getElementById('transcriptionMode').value;
+    console.log("Emitting start_recording event with mode:", mode);
     socket.emit('start_recording', { mode: mode });
 }
 
@@ -48,38 +55,57 @@ function updateRecordButtonState(isRecording) {
     }
 }
 
-socket.on('transcription', function(data) {
-    console.log("Received transcription:", data);
-    const transcriptionDiv = document.getElementById('transcription');
-    
-    if (data.is_final) {
-        finalTranscript += data.text + ' ';
-        interimTranscript = '';
+socket.on('connect', function() {
+    console.log('Connected to server');
+});
+
+socket.on('server_message', function(data) {
+    console.log('Server message:', data.data);
+});
+
+socket.on('transcription_update', function(data) {
+    console.log("Received transcription update:", data);
+    updateTranscriptionBox(data.text, data.is_final);
+});
+
+function updateTranscriptionBox(text, isFinal) {
+    const transcriptionDiv = document.getElementById('transcriptionText');
+    if (transcriptionDiv) {
+        if (isFinal) {
+            transcriptText += text + ' ';
+        }
+        transcriptionDiv.textContent = transcriptText + (isFinal ? '' : text);
+        console.log("Updated transcription box:", transcriptionDiv.textContent);
     } else {
-        interimTranscript = data.text;
+        console.error("Transcription box not found");
     }
-    
-    transcriptionDiv.innerHTML = finalTranscript + '<span class="interim">' + interimTranscript + '</span>';
-});
-
-socket.on('ditto_match', function(data) {
-    console.log("Received ditto match:", data);
-    if (data.matched_words > currentMatchedWords) {
-        updateDittoSentence(data.matched_words);
-        currentMatchedWords = data.matched_words;
-    }
-});
-
-function updateDittoSentence(matchedWords) {
-    console.log("Updating Ditto sentence, matched words:", matchedWords);
-    const dittoSentenceDiv = document.getElementById('ditto-sentence');
-    const highlightedWords = dittoWords.map((word, index) => 
-        index < matchedWords ? `<span class="matched-word">${word}</span>` : word
-    );
-    dittoSentenceDiv.querySelector('.mdl-card__supporting-text').innerHTML = highlightedWords.join(' ');
 }
 
-socket.on('error', function(data) {
-    console.error('Server error:', data.message);
-    alert('An error occurred: ' + data.message);
+function checkTranscriptionBox() {
+    const transcriptionDiv = document.getElementById('transcriptionText');
+    if (!transcriptionDiv) {
+        console.error("Transcription box not found in the DOM");
+    } else {
+        console.log("Transcription box found:", transcriptionDiv);
+    }
+}
+
+// Add error handling for socket connection
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+});
+
+socket.on('error', (error) => {
+    console.error('Socket error:', error);
+});
+
+// Test function
+function testTranscriptionBox() {
+    console.log("Testing transcription box update");
+    updateTranscriptionBox("This is a test transcription.", true);
+}
+
+// Call test function when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    testTranscriptionBox();
 });

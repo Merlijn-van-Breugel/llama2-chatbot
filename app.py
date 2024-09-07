@@ -10,11 +10,11 @@ import wave
 import queue
 import threading
 import pyaudio
-from fuzzywuzzy import fuzz # For fuzzy matching
+from fuzzywuzzy import fuzz
 import re
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
@@ -135,17 +135,23 @@ def save_audio():
         logger.info(f"Audio saved: {filepath}")
         return jsonify({'filename': filename}), 200
 
+@socketio.on('connect')
+def handle_connect():
+    logger.info("Client connected")
+    emit('server_message', {'data': 'Connected to server'})
+
 @socketio.on('start_recording')
 def handle_start_recording(data):
     global transcription_mode, audio_stream, last_matched_index
     transcription_mode = data['mode']
-    last_matched_index = 0  # Reset the last matched index when starting a new recording
+    last_matched_index = 0
     logger.info(f"Starting recording in {transcription_mode} mode")
     stop_transcription.clear()
     if transcription_mode == 'realtime':
         audio_stream = MicrophoneStream()
         socketio.start_background_task(transcribe_audio_stream)
     logger.info("Recording started")
+    socketio.emit('debug', {'message': 'Recording started'}, namespace='/')
 
 @socketio.on('stop_recording')
 def handle_stop_recording():
@@ -227,17 +233,15 @@ def transcribe_audio_stream():
                 is_final = result.is_final
 
                 logger.info(f"Transcription: {transcript} ({'final' if is_final else 'interim'})")
-                socketio.emit('transcription', {
+                socketio.emit('transcription_update', {
                     'text': transcript, 
                     'is_final': is_final
-                }, namespace='/')
-
-                # Run fuzzy matching in a separate thread
-                threading.Thread(target=process_fuzzy_match, args=(transcript,)).start()
+                })
+                socketio.sleep(0)  # Allow other threads to run
 
         except Exception as e:
             logger.error(f"Error in streaming recognition: {str(e)}")
-            socketio.emit('error', {'message': f"Streaming error: {str(e)}"}, namespace='/')
+            socketio.emit('error', {'message': f"Streaming error: {str(e)}"})
     
     logger.info("Audio stream transcription ended")
 
