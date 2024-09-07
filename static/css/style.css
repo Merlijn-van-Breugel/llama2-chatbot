@@ -1,0 +1,65 @@
+.page-content {
+    padding: 20px;
+}
+
+#recordButton {
+    display: block;
+    margin: 20px auto;
+    background-color: #4285f4;  /* Google blue color */
+    transition: background-color 0.3s ease;
+}
+
+#transcription {
+    width: 100%;
+    min-height: 200px;
+}
+
+#transcriptionText {
+    min-height: 150px;
+    white-space: pre-wrap;
+}
+
+.recording #recordButton {
+    background-color: #757575;
+}
+
+.recording #recordButton i {
+    color: #ff5252;
+}
+
+#recordButton.recording {
+    background-color: #757575;  /* Gray color when recording */
+}
+
+#recordButton.recording i {
+    color: #ff5252;  /* Red color for stop icon */
+}
+
+/* Add this to your existing CSS */
+#ditto-sentence {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.matched-word {
+    color: blue;
+    font-weight: bold;
+}
+
+.interim {
+    color: gray;
+    font-style: italic;
+}
+
+#recognized-ditto {
+    margin-top: 20px;
+}
+
+.recognized-word {
+    background-color: yellow;
+    padding: 2px 4px;
+    margin: 0 2px;
+    border-radius: 3px;
+}

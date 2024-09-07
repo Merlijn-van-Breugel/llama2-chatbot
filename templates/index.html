@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Transcription</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row">
+                <span class="mdl-layout-title">Real-time Transcription</span>
+            </div>
+        </header>
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <div class="mdl-grid">
+                    <div class="mdl-cell mdl-cell--12-col">
+                        <button id="micTestButton" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                            Test Microphone
+                        </button>
+                        <div id="micTestResult" class="mdl-chip mdl-chip--contact" style="display: none;">
+                            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+                                <i class="material-icons">mic</i>
+                            </span>
+                            <span class="mdl-chip__text">Microphone test result</span>
+                        </div>
+                    </div>
+                    <div class="mdl-cell mdl-cell--12-col">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <select class="mdl-textfield__input" id="transcriptionMode">
+                                <option value="realtime">Realtime</option>
+                                <option value="batch">Batch</option>
+                            </select>
+                            <label class="mdl-textfield__label" for="transcriptionMode">Transcription Mode</label>
+                        </div>
+                    </div>
+                    <div class="mdl-cell mdl-cell--12-col">
+                        <button id="recordButton" class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
+                            <i class="material-icons">mic</i>
+                        </button>
+                    </div>
+                    <div class="mdl-cell mdl-cell--12-col">
+                        <div id="transcription" class="mdl-card mdl-shadow--2dp">
+                            <div class="mdl-card__title">
+                                <h2 class="mdl-card__title-text">Transcription</h2>
+                            </div>
+                            <div class="mdl-card__supporting-text" id="transcriptionText">
+                                Your transcription will appear here...
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Add this after the transcription box -->
+                    <div class="mdl-cell mdl-cell--12-col">
+                        <div id="ditto-sentence" class="mdl-card mdl-shadow--2dp">
+                            <div class="mdl-card__supporting-text">
+                                Ditto becomes smarter and more accurate the more people use it. If Ditto makes mistakes, corrections allows Ditto to learn and do better next time.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
